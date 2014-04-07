@@ -1,9 +1,7 @@
-
-/*
- * GET home page.
- */
 var crypto = require('crypto'),
-    path = require('path');
+    path = require('path'),
+    db = require('../db'),
+    pg = require('pg').native;
 
 module.exports = function (app) {
   var content = {},
@@ -16,9 +14,20 @@ module.exports = function (app) {
     if (!req.cookie.id) {
       var md5 = crypto.createHash('md5');
       md5.update(String(Date.now()) + Math.random());
-      res.cookie('id', md5.digest('hex'), { maxAge: 1000 * 60 * 60 * 24 * 7 });
+      var digest = md5.digest('hex');
+      res.cookie('id', digest, { maxAge: 1000 * 60 * 60 * 24 * 7 });
+      pg.connect(db, function (err, client, done) {
+        if(err) return dealWithError('Postgres error: ' + err);
+        client.query('INSERT INTO speedread (user_id) VALUES $1',
+          [digest], function (err, result) {
+            if(err) return dealWithError('Postgres error: ' + err);
+            done();
+            res.render('index'); 
+          });
+      });
+    } else {
+      res.render('index');
     }
-    res.render('index');
   });
 
   app.get('/:test', function (req, res) {
@@ -56,16 +65,24 @@ module.exports = function (app) {
         wpm = req.body.wpm,
         percentCorrect = gradeAnswers(testname, answers);
     // add to database
+    pg.connect(db, function (err, client, done) {
+      if(err) return dealWithError('Postgres error: ' + err);
+      client.query('UPDATE speedread SET ' + testname + ' = $1, wpm_' +
+        testname + ' = $2 WHERE user_id = $3',
+        [percentCorrect, wpm, req.cookies.id], function (err, result) {
+          if(err) return dealWithError('Postgres error: ' + err);
+          done();
+        });
+    });
   });
 
   function gradeAnswers (testname, answers) {
     if (!answers[testname]) {
       var answerPath = path.join(__dirname, '..', 'data', 'answers', testname + '.txt'),
-      fs.readFile(answerPath, 'utf8', function (err, testAnswers) {
-        testAnswers = testAnswers.split(' ');
-        answers[testname] = testAnswers;
-        return grade(answers[testname]);
-      });
+      testAnswers = fs.readFileSync(answerPath, 'utf8'); // sync is simpler
+      testAnswers = testAnswers.split(' ');
+      answers[testname] = testAnswers;
+      return grade(answers[testname]);
     } else {
       return grade(answers[testname]);
     }
@@ -75,13 +92,25 @@ module.exports = function (app) {
       for (var i = 0; i < answers.length; i++) {
         numCorrect += (answers[i] == correct[i]);
       }
-      return numCorrect / answers.length;
+      return 100 * numCorrect / answers.length;
     }
   }
 
   app.get('/results', function (req, res) {
-    var id = req.cookies.id;
     // deal with database
+    pg.connect(db, function (err, client, done) {
+      if (err) return dealWithError('Postgres error: ' + err);
+      client.query('SELECT * FROM speedread WHERE user_id = $1',
+        [req.cookies.id], function (err, result) {
+          if (err) return dealWithError('Postgres error: ' + err);
+          done();
+          res.render('results', { user: result.rows[0] });
+        });
+    });
+  });
+
+  app.get('/404', function (req, res) {
+    res.end('Something went wrong. Sorry!');
   });
 
   function dealWithError (err) {
