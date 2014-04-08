@@ -7,8 +7,7 @@ module.exports = function (app) {
   var content = {},
       questions = {},
       answers = {},
-      validTests = ['speednews', 'regnews', 'speedhist', 'reghist',
-                    'speedfiction', 'regfiction'];
+      validTests = ['speedfiction', 'regfiction'];
   
   app.get('/', function (req, res) {
     if (!req.cookie.id) {
