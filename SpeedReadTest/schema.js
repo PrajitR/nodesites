@@ -10,16 +10,8 @@ client.connect();
 
 queryString = 'CREATE TABLE speedread (' +
               'user_id varchar (32) PRIMARY KEY,' +
-              'speednews smallint,' +
-              'regnews smallint,' +
-              'speedhist smallint,' +
-              'reghist smallint,' +
               'speedfiction smallint,' +
               'regfiction smallint,' +
-              'wpm_speednews smallint,' +
-              'wpm_regnews smallint,' +
-              'wpm_speedhist smallint,' +
-              'wpm_reghist smallint,' +
               'wpm_speedfiction smallint,' +
               'wpm_regfiction smallint' +
               ');';
