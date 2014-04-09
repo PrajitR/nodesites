@@ -4,7 +4,7 @@
  */
 
 var express = require('express');
-var routes = require('./routes');
+var routes = require('./routes/index.js');
 var http = require('http');
 var path = require('path');
 
@@ -20,8 +20,7 @@ app.use(express.json());
 app.use(express.urlencoded());
 app.use(express.methodOverride());
 app.use(app.router);
-app.use(require('less-middleware')({ src: path.join(__dirname, 'public') }));
-app.use(cookieParser());
+app.use(express.cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // development only

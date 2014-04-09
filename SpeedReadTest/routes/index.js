@@ -1,7 +1,8 @@
 var crypto = require('crypto'),
     path = require('path'),
     db = require('../db'),
-    pg = require('pg').native;
+    pg = require('pg').native,
+    fs = require('fs');
 
 module.exports = function (app) {
   var content = {},
@@ -10,16 +11,16 @@ module.exports = function (app) {
       validTests = ['speedfiction', 'regfiction'];
   
   app.get('/', function (req, res) {
-    if (!req.cookie.id) {
+    if (!(req.cookie && req.cookie.id)) {
       var md5 = crypto.createHash('md5');
       md5.update(String(Date.now()) + Math.random());
       var digest = md5.digest('hex');
       res.cookie('id', digest, { maxAge: 1000 * 60 * 60 * 24 * 7 });
       pg.connect(db, function (err, client, done) {
-        if(err) return dealWithError('Postgres error: ' + err);
-        client.query('INSERT INTO speedread (user_id) VALUES $1',
+        if(err) return dealWithError('Postgres error: ' + err, res);
+        client.query('INSERT INTO speedread (user_id) VALUES ($1)',
           [digest], function (err, result) {
-            if(err) return dealWithError('Postgres error: ' + err);
+            if(err) return dealWithError('Postgres error: ' + err, res);
             done();
             res.render('index'); 
           });
@@ -29,20 +30,20 @@ module.exports = function (app) {
     }
   });
 
-  app.get('/:test', function (req, res) {
+  app.get('/test/:test', function (req, res) {
     var testname = req.params.test;
-    if (validTests.index(testname) == -1)
-      dealWithError('No such test: ' + testname);
+    if (validTests.indexOf(testname) == -1)
+      dealWithError('No such test: ' + testname, res);
 
     if (!content[testname] || !questions[testname]) {
       var contentPath = path.join(__dirname, '..', 'data', 'content', testname + '.txt'),
           questionPath = path.join(__dirname, '..', 'data', 'questions', testname + '.txt');
 
       fs.readFile(contentPath, 'utf8', function (err, testContent) {
-        if (err) dealWithError(err);
+        if (err) dealWithError(err, res);
         content[testname] = testContent;
         fs.readFile(questionPath, 'utf8', function (err, testQuestions) {
-          if (err) dealWithError(err);
+          if (err) dealWithError(err, res);
           testQuestions = testQuestions.split('---');
           questions[testname] = testQuestions;
 
@@ -54,20 +55,20 @@ module.exports = function (app) {
       res.render('test', { testname: testname, 
         content: content[testname], questions: questions[testname] });
     }
-  }
+  });
 
-  app.post('/:test', function (req, res) {
+  app.post('/test/:test', function (req, res) {
     var testname = req.params.test;
-    if (validTests.index(testname) == -1)
-      dealWithError('No such test: ' + testname);
+    if (validTests.indexOf(testname) == -1)
+      dealWithError('No such test: ' + testname, res);
     var answers = req.body.answers,
         wpm = req.body.wpm,
         percentCorrect = gradeAnswers(testname, answers);
     // add to database
     pg.connect(db, function (err, client, done) {
       if(err) return dealWithError('Postgres error: ' + err);
-      client.query('UPDATE speedread SET ' + testname + ' = $1, wpm_' +
-        testname + ' = $2 WHERE user_id = $3',
+      client.query('UPDATE speedread SET ' + testname + ' = ($1), wpm_' +
+        testname + ' = ($2) WHERE user_id = ($3)',
         [percentCorrect, wpm, req.cookies.id], function (err, result) {
           if(err) return dealWithError('Postgres error: ' + err);
           done();
@@ -98,8 +99,8 @@ module.exports = function (app) {
   app.get('/results', function (req, res) {
     // deal with database
     pg.connect(db, function (err, client, done) {
-      if (err) return dealWithError('Postgres error: ' + err);
-      client.query('SELECT * FROM speedread WHERE user_id = $1',
+      if (err) return dealWithError('Postgres error: ' + err, res);
+      client.query('SELECT * FROM speedread WHERE user_id = ($1)',
         [req.cookies.id], function (err, result) {
           if (err) return dealWithError('Postgres error: ' + err);
           done();
@@ -112,7 +113,7 @@ module.exports = function (app) {
     res.end('Something went wrong. Sorry!');
   });
 
-  function dealWithError (err) {
+  function dealWithError (err, res) {
     console.error(err);
     return res.redirect('/404');
   }
