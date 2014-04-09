@@ -1,0 +1,42 @@
+extends layout
+
+block content
+  script.
+    $(document).ready(function () {
+      var wpm,
+          start = Date.now();
+      $('.finish-read').click(function () {
+        var end = Date.now();
+        wpm = 7100 / ((end - start) / (1000 * 60));
+        $('form').css('visibility', 'visible');
+        $('.wpm-field').attr('value', wpm);
+        $('.story').remove();
+        $(this).remove();
+      });
+    });
+
+  h1= testname
+  .story
+    each c in content.split('\n')
+      code= c
+      br
+  button.finish-read Finished
+  br
+  hr
+
+  form(style="visibility:collapse", action="/test/#{testname}", method="post")
+    each question,index in questions
+      - var question = question.split('\n');
+      label= question[0]
+      p= question[1]
+      input(type="radio", value="A", name="q#{index}") 
+      p= question[2]
+      input(type="radio", value="B", name="q#{index}") 
+      p= question[3]
+      input(type="radio", value="C", name="q#{index}") 
+      p= question[4]
+      input(type="radio", value="D", name="q#{index}")
+      hr
+    input.wpm-field(type="hidden", name="wpm")
+
+    button(type="submit") Submit
