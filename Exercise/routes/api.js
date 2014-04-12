@@ -40,8 +40,10 @@ module.exports = function api (app) {
   });
 
   app.delete('/users/:id', function (req, res) {
-    User.remove({ id: req.params.id });
-    res.end();
+    User.remove({ id: req.params.id }, function (err) {
+      if (err) console.error(err); 
+      res.json({ 'deleted': 200 });
+    });
   });
 
   function createId () {

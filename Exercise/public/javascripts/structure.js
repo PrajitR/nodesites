@@ -70,18 +70,26 @@ var EditUser = Backbone.View.extend({
     });
   },
   events: {
-    'submit #edit-user-form': 'editUser'
+    'submit #edit-user-form': 'editUser',
+    'click #delete-button': 'deleteUser'
   },
   editUser: function (ev) {
     var userDetails = $(ev.currentTarget).serializeObject();
     var user = new User();
     user.save(userDetails, {
-      success: function () {
-        console.log('Success!');
+      success: function (user) {
         router.navigate('', { trigger: true });
       }
     });
     return false;
+  },
+
+  deleteUser: function (ev) {
+    this.user.destroy({
+      success: function () {
+        router.navigate('', { trigger: true });
+      }
+    });
   }
 });
 
