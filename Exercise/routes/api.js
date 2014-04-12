@@ -21,13 +21,22 @@ module.exports = function api (app) {
   app.get('/users/:id', function (req, res) {
     User.find({ id: req.params.id }, function (err, user) {
       if (err) return dealWithError('Mongo Error (get /users:id): ' + err, res, 404);
-      res.json(user.toObject());
+      res.json(user);
     });
   });
 
   app.put('/users/:id', function (req, res) {
-    User.update({ id: req.params.id }, { exercises: req.body.exercises });
-    res.end();
+    var name = req.body.name,
+        reps = +req.body.reps,
+        date = new Date(req.body.date),
+        family = req.body.family;
+    var exercise = {name: name, reps: reps, date: date, family: family };
+    console.dir(exercise);
+    User.update({ id: req.body.id }, { $push: { 'exercises': exercise }}, { upsert: true },
+      function (err, num, raw) {
+        if (err) console.error(err);
+        res.json({ 'success': 200 });
+      });
   });
 
   app.delete('/users/:id', function (req, res) {

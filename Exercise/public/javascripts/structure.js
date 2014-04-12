@@ -43,7 +43,7 @@ var NewUser = Backbone.View.extend({
     this.$el.html(template);
   },
   events: {
-    'submit .new-user-form': 'createUser'
+    'submit #new-user-form': 'createUser'
   },
   createUser: function (ev) {
     var userDetails = $(ev.currentTarget).serializeObject();
@@ -57,15 +57,45 @@ var NewUser = Backbone.View.extend({
   }
 });
 
+var EditUser = Backbone.View.extend({
+  el: '.page',
+  render: function (options) {
+    var that = this;
+    that.user = new User({ id: options.id });
+    that.user.fetch({
+      success: function (user) {
+        var template = _.template($('#edit-user-template').html(), { user: user.attributes[0] });
+        that.$el.html(template);
+      }
+    });
+  },
+  events: {
+    'submit #edit-user-form': 'editUser'
+  },
+  editUser: function (ev) {
+    var userDetails = $(ev.currentTarget).serializeObject();
+    var user = new User();
+    user.save(userDetails, {
+      success: function () {
+        console.log('Success!');
+        router.navigate('', { trigger: true });
+      }
+    });
+    return false;
+  }
+});
+
 var Router = Backbone.Router.extend({
   routes: {
     '': 'home',
-    'new': 'newUser'
+    'new': 'newUser',
+    'edit/:id': 'editUser'
   }
 });
 
 var userList = new UserList();
 var newUser = new NewUser();
+var editUser = new EditUser();
 
 var router = new Router();
 router.on('route:home', function () {
@@ -73,5 +103,8 @@ router.on('route:home', function () {
 });
 router.on('route:newUser', function () {
   newUser.render();
+});
+router.on('route:editUser', function (id) {
+  editUser.render({ id : id });
 });
 Backbone.history.start();

@@ -6,8 +6,8 @@ var User = new Schema({
   name: String,
   exercises: [
     { name: String,
-      reps: [ Number ],
-      dates: [ Date ],
+      reps:  Number ,
+      date:  Date ,
       family: String
     } ]
 });

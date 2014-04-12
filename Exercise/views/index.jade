@@ -18,13 +18,48 @@ block content
     </ul>
 
   script#new-user-template(type="text/template").
-    <form class="new-user-form">
+    <form id="new-user-form">
       <div class="form-group">
         <label> Name </label>
         <input class="form-control" type="text" name="name" />
       </div>
       <button class="btn btn-default" type="submit">Submit</button>
     </form>
+
+  script#edit-user-template(type="text/template").
+    <h1><%= user.name %></h1>
+    <ul class="list-group">
+      <% _.each(user.exercises, function (e) { %>
+        <li class="list-group-item">
+          <p><%= e.name %></p>
+          <p><%= e.reps %></p>
+          <p><%= e.family %></p>
+          <p><%= e.date %></p>
+        </li>
+      <% }); %>
+    </ul>
+
+    <form id="edit-user-form">
+      <input type="hidden" name="id" value="<%= user.id %>" />
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" name="date">
+      </div>
+      <div class="form-group">
+        <label>Exercise</label>
+        <input type="text" name="name" />
+      </div>
+      <div class="form-group">
+        <label>Reps</label>
+        <input type="number" name="reps" />
+      </div>
+      <div class="form-group">
+        <label>Family Type of Exercise</label>
+        <input type="text" name="family" />
+      </div>
+      <button class="btn btn-default" type="submit">Submit</button>
+    </form>
+      
 
   script(src="/javascripts/structure.js")
     
