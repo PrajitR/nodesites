@@ -11,7 +11,7 @@ module.exports = function api (app) {
 
   app.post('/users', function (req, res) {
     var id = createId(),
-        user = new User({ id: id, exercises: [] } );
+        user = new User({ id: id, name: req.body.name, exercises: [] } );
     user.save(function (err, user) {
       if (err) return dealWithError('Mongo Error (post /users): ' + err, res, 404);
       res.json(user.toObject());
@@ -27,16 +27,18 @@ module.exports = function api (app) {
 
   app.put('/users/:id', function (req, res) {
     User.update({ id: req.params.id }, { exercises: req.body.exercises });
+    res.end();
   });
 
   app.delete('/users/:id', function (req, res) {
     User.remove({ id: req.params.id });
+    res.end();
   });
 
   function createId () {
     var md5 = crypto.createHash('md5');
-    md5.update(Date.now());
-    md5.update(Math.random() * 1000);
+    md5.update('' + Date.now());
+    md5.update('' + (Math.random() * 1000));
     return md5.digest('hex');
   }
 
@@ -45,4 +47,4 @@ module.exports = function api (app) {
     statusCode = statusCode || 500;
     res.send(statusCode);
   }
-});
+};

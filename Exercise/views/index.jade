@@ -1,5 +1,30 @@
 extends layout
 
 block content
-  h1= title
-  p Welcome to #{title}
+  .container
+    h1 Exercise
+    hr
+    .page
+
+  script#user-list-template(type="text/template").
+    <a href="#/new" class="btn btn-primary">New User</a>
+    <hr/>
+    <ul class="list-group">
+      <% _.each(users, function (user) { %>
+        <li class="list-group-item">
+          <a href="#/edit/<%= user.id %>"> <%= user.attributes.name %> </a>
+         </li>
+      <% }); %>
+    </ul>
+
+  script#new-user-template(type="text/template").
+    <form class="new-user-form">
+      <div class="form-group">
+        <label> Name </label>
+        <input class="form-control" type="text" name="name" />
+      </div>
+      <button class="btn btn-default" type="submit">Submit</button>
+    </form>
+
+  script(src="/javascripts/structure.js")
+    

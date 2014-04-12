@@ -3,6 +3,7 @@ var mongoose = require('mongoose'),
 
 var User = new Schema({
   id: String,
+  name: String,
   exercises: [
     { name: String,
       reps: [ Number ],
