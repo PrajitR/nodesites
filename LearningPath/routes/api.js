@@ -1,4 +1,5 @@
-var Subject = require('../models/subject');
+var Subject = require('../models/subject'),
+    Node = require('../models/node');
 
 module.exports = function apiRoutes (app) {
   app.get('/subject', function (req, res) {
@@ -46,6 +47,15 @@ module.exports = function apiRoutes (app) {
           res.json(subject.toObject());
         });
       }
+    });
+  });
+
+  app.post('/node', function (req, res) {
+    var node = new Node({ name: req.body.name, description: req.body.description,
+      link: req.body.link, targets: req.body.targets });
+    node.save(function (err, node) {
+      if (err) return dealWithError(err, res);
+      res.json(node.toObject());
     });
   });
 

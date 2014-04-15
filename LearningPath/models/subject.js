@@ -4,7 +4,7 @@ var mongoose = require('mongoose'),
 
 var Subject = new Schema({
   name: String,
-  path: [ Node ]
+  nodes: [ Node ]
 });
 
 module.exports = mongoose.model('Subject', Subject);
